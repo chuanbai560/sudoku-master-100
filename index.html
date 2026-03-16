@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sudoku Master 100</title>
+<title>Sudoku Master</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -59,9 +59,7 @@ color:#00f2ff;
 
 body.eye input{color:#333;}
 
-.fixed input{
-font-weight:bold;
-}
+.fixed input{font-weight:bold;}
 
 button{
 padding:8px 15px;
@@ -79,10 +77,8 @@ border:1px solid #333;
 }
 
 @media (max-width:600px){
-
 td{width:36px;height:36px;}
 input{font-size:18px;}
-
 }
 
 </style>
@@ -95,7 +91,7 @@ input{font-size:18px;}
 
 <div>
 
-Mode: <span id="mode">Classic</span> |
+Mode: <span id="mode"></span> |
 Round: <span id="round"></span>/100 |
 Score: <span id="score"></span> |
 Mistakes: <span id="mistakes"></span>/3 |
@@ -167,7 +163,6 @@ timer++
 
 let m=Math.floor(timer/60)
 let s=timer%60
-
 if(s<10)s="0"+s
 
 document.getElementById("timer").innerText=m+":"+s
@@ -224,7 +219,6 @@ return false
 }
 
 fill()
-
 return g
 
 }
@@ -238,12 +232,17 @@ return x-Math.floor(x)
 
 function makePuzzle(grid,seed=null){
 
-let givens=30
+let givens
 
 if(mode=="classic"){
 
-givens=22+Math.floor((100-round)/5)
-if(givens>41)givens=41
+givens = 22 + Math.floor((100 - round) / 5)
+
+if(givens > 41) givens = 41
+
+}else{
+
+givens = 30
 
 }
 
@@ -259,6 +258,7 @@ if(seed!=null){
 
 seed++
 r=Math.floor(seededRandom(seed)*9)
+
 seed++
 c=Math.floor(seededRandom(seed)*9)
 
@@ -415,7 +415,6 @@ puzzle[pick.r][pick.c]=solution[pick.r][pick.c]
 hints--
 
 drawBoard()
-
 updateInfo()
 
 }
@@ -429,7 +428,6 @@ if(puzzle[r][c]!=solution[r][c]) return
 if(mode=="daily"){
 
 let today=new Date().toDateString()
-
 localStorage.setItem("daily_"+today,"done")
 
 alert("Daily Challenge Completed!")
@@ -474,9 +472,7 @@ document.getElementById("leaderboard").innerHTML=html
 }
 
 function toggleMode(){
-
 document.body.classList.toggle("eye")
-
 }
 
 function newGame(){
@@ -490,9 +486,7 @@ mistakes=0
 hints=2
 
 drawBoard()
-
 startTimer()
-
 updateInfo()
 
 }
@@ -506,16 +500,13 @@ let today=new Date()
 let seed=today.getFullYear()*10000+(today.getMonth()+1)*100+today.getDate()
 
 solution=generateSudoku()
-
 puzzle=makePuzzle(solution,seed)
 
 mistakes=0
 hints=2
 
 drawBoard()
-
 startTimer()
-
 updateInfo()
 
 }
