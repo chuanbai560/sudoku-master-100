@@ -2,281 +2,478 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sudoku Master 100 – Ultimate Online Challenge</title>
+<title>Sudoku Master 100</title>
 
-<meta name="description" content="Play Sudoku Master 100 online for free. Complete 100 progressive levels and become the ultimate Sudoku Master. Train your brain daily.">
-<meta name="keywords" content="free sudoku online, sudoku challenge, hard sudoku, sudoku 100 levels, brain training game">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+
 body{
-    font-family: Arial, sans-serif;
-    background:#0e1a22;
-    text-align:center;
-    color:#00f2ff;
-    margin:0;
-}
-
-header{
-    padding:20px;
-}
-
-h1{
-    margin:0;
-    font-size:28px;
-}
-
-.subtitle{
-    font-size:14px;
-    color:#aaa;
-    margin-top:5px;
-}
-
-.stats{
-    margin-top:15px;
-    font-size:14px;
-}
-
-button{
-    padding:8px 15px;
-    margin:5px;
-    background:#0b1117;
-    color:#00f2ff;
-    border:1px solid #00f2ff;
-    cursor:pointer;
+font-family:Arial;
+background:#0e1a22;
+color:#00f2ff;
+text-align:center;
+margin:0;
 }
 
 table{
-    margin:20px auto;
-    border-collapse:collapse;
-    border:3px solid #00f2ff;
+margin:20px auto;
+border-collapse:collapse;
+border:3px solid #00f2ff;
 }
 
 td{
-    width:45px;
-    height:45px;
-    border:1px dashed rgba(0,242,255,0.4);
+width:45px;
+height:45px;
+border:1px dashed rgba(0,242,255,0.4);
 }
 
-tr:nth-child(3n) td{ border-bottom:3px solid #00f2ff; }
-td:nth-child(3n){ border-right:3px solid #00f2ff; }
+tr:nth-child(3n) td{border-bottom:3px solid #00f2ff;}
+td:nth-child(3n){border-right:3px solid #00f2ff;}
 
 input{
-    width:100%;
-    height:100%;
-    text-align:center;
-    font-size:20px;
-    border:none;
-    background:transparent;
-    color:#00f2ff;
+width:100%;
+height:100%;
+font-size:20px;
+text-align:center;
+background:transparent;
+border:none;
+color:#00f2ff;
 }
 
 .fixed input{
-    color:#ffffff;
-    font-weight:bold;
+color:#ffffff;
+font-weight:bold;
 }
 
-.section{
-    max-width:700px;
-    margin:40px auto;
-    padding:0 20px;
-    color:#ddd;
-    font-size:14px;
-    line-height:1.6;
+button{
+padding:8px 15px;
+margin:5px;
+background:#0b1117;
+color:#00f2ff;
+border:1px solid #00f2ff;
+cursor:pointer;
 }
 
-footer{
-    margin-top:40px;
-    padding:20px;
-    font-size:12px;
-    color:#888;
-}
 </style>
 </head>
 
 <body>
 
-<header>
-<h1>🧠 Sudoku Master 100</h1>
-<div class="subtitle">The Ultimate 100-Level Online Sudoku Challenge</div>
-</header>
-
-<div class="stats">
-Round: <span id="round">1</span>/100 |
-Level: <span id="level">1</span> |
-Title: <span id="title">Beginner</span> |
-Score: <span id="score">0</span>
-</div>
+<h1>Sudoku Master 100</h1>
 
 <div>
-<button onclick="newGame()">Start Current Level</button>
+Round: <span id="round"></span>/100 |
+Score: <span id="score"></span> |
+Mistakes: <span id="mistakes"></span>/3 |
+Hints: <span id="hints"></span>/2 |
+Time: <span id="timer">0:00</span>
 </div>
+
+<button onclick="newGame()">Start Level</button>
+<button onclick="useHint()">Hint</button>
 
 <table id="board"></table>
 
-<!-- 广告预留位 -->
-<div style="margin:30px 0;">
-<!-- Google AdSense 广告代码将来放这里 -->
-Ad Space
-</div>
-
-<div class="section">
-<h2>About Sudoku Master 100</h2>
-<p>
-Sudoku Master 100 is a free online Sudoku game featuring 100 progressive levels.
-Each stage increases in difficulty, challenging your logic, focus, and problem-solving skills.
-Complete all 100 rounds to achieve the ultimate title and prove your mastery.
-</p>
-
-<h2>Why Play Sudoku?</h2>
-<p>
-Sudoku improves logical thinking, memory, and concentration.
-Many players use Sudoku as daily brain training.
-With increasing difficulty levels, this game is suitable for beginners and experts alike.
-</p>
-</div>
-
-<footer>
-© 2026 Sudoku Master 100 | Free Online Sudoku Game
-</footer>
+<h3>Leaderboard</h3>
+<div id="leaderboard"></div>
 
 <script>
 
-let solution=[], puzzle=[];
-let round=localStorage.getItem("round")*1||1;
-let score=localStorage.getItem("score")*1||0;
+let solution=[]
+let puzzle=[]
 
-updateInfo();
+let round=localStorage.getItem("round")*1||1
+let score=localStorage.getItem("score")*1||0
 
-function getLevel(){
-    return Math.ceil(round/10);
-}
+let mistakes=0
+let maxMistakes=3
 
-function getTitle(){
-    let titles=[
-    "Beginner","Intermediate","Skilled","Advanced",
-    "Expert","Master","Grandmaster","Elite",
-    "Legend","Ultimate Master"
-    ];
-    return titles[Math.floor((round-1)/10)];
-}
+let hints=2
+
+let timer=0
+let timerInterval=null
+
+let leaderboard=JSON.parse(localStorage.getItem("leaderboard")||"[]")
 
 function updateInfo(){
-    document.getElementById("round").innerText=round;
-    document.getElementById("level").innerText=getLevel();
-    document.getElementById("score").innerText=score;
-    document.getElementById("title").innerText=getTitle();
-    localStorage.setItem("round",round);
-    localStorage.setItem("score",score);
+
+document.getElementById("round").innerText=round
+document.getElementById("score").innerText=score
+document.getElementById("mistakes").innerText=mistakes
+document.getElementById("hints").innerText=hints
+
+localStorage.setItem("round",round)
+localStorage.setItem("score",score)
+
+renderLeaderboard()
+
+}
+
+function formatTime(t){
+
+let m=Math.floor(t/60)
+let s=t%60
+if(s<10)s="0"+s
+return m+":"+s
+
+}
+
+function startTimer(){
+
+clearInterval(timerInterval)
+
+timer=0
+
+timerInterval=setInterval(()=>{
+
+timer++
+document.getElementById("timer").innerText=formatTime(timer)
+
+},1000)
+
 }
 
 function generateSudoku(){
-    let g=Array.from({length:9},()=>Array(9).fill(0));
 
-    function valid(r,c,n){
-        for(let i=0;i<9;i++)
-            if(g[r][i]==n||g[i][c]==n) return false;
-        let br=Math.floor(r/3)*3;
-        let bc=Math.floor(c/3)*3;
-        for(let i=0;i<3;i++)
-            for(let j=0;j<3;j++)
-                if(g[br+i][bc+j]==n) return false;
-        return true;
-    }
+let g=Array.from({length:9},()=>Array(9).fill(0))
 
-    function fill(pos=0){
-        if(pos==81) return true;
-        let r=Math.floor(pos/9),c=pos%9;
-        let nums=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5);
-        for(let n of nums){
-            if(valid(r,c,n)){
-                g[r][c]=n;
-                if(fill(pos+1)) return true;
-                g[r][c]=0;
-            }
-        }
-        return false;
-    }
-    fill();
-    return g;
+function valid(r,c,n){
+
+for(let i=0;i<9;i++)
+if(g[r][i]==n||g[i][c]==n) return false
+
+let br=Math.floor(r/3)*3
+let bc=Math.floor(c/3)*3
+
+for(let i=0;i<3;i++)
+for(let j=0;j<3;j++)
+if(g[br+i][bc+j]==n) return false
+
+return true
+
+}
+
+function fill(pos=0){
+
+if(pos==81) return true
+
+let r=Math.floor(pos/9)
+let c=pos%9
+
+let nums=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5)
+
+for(let n of nums){
+
+if(valid(r,c,n)){
+
+g[r][c]=n
+
+if(fill(pos+1)) return true
+
+g[r][c]=0
+
+}
+
+}
+
+return false
+
+}
+
+fill()
+
+return g
+
+}
+
+function validCheck(g,r,c,n){
+
+for(let i=0;i<9;i++)
+if(g[r][i]==n||g[i][c]==n) return false
+
+let br=Math.floor(r/3)*3
+let bc=Math.floor(c/3)*3
+
+for(let i=0;i<3;i++)
+for(let j=0;j<3;j++)
+if(g[br+i][bc+j]==n) return false
+
+return true
+
+}
+
+function countSolutions(grid){
+
+let count=0
+
+function solve(){
+
+for(let r=0;r<9;r++){
+for(let c=0;c<9;c++){
+
+if(grid[r][c]==0){
+
+for(let n=1;n<=9;n++){
+
+if(validCheck(grid,r,c,n)){
+
+grid[r][c]=n
+solve()
+grid[r][c]=0
+
+}
+
+}
+
+return
+
+}
+
+}
+}
+
+count++
+
+}
+
+solve()
+
+return count
+
 }
 
 function makePuzzle(grid){
-    let holes=30+getLevel()*2;
-    let p=grid.map(r=>r.slice());
-    while(holes>0){
-        let r=Math.floor(Math.random()*9);
-        let c=Math.floor(Math.random()*9);
-        if(p[r][c]!=0){
-            p[r][c]=0;
-            holes--;
-        }
-    }
-    return p;
+
+let givens=22+Math.floor((100-round)/5)
+if(givens>41)givens=41
+
+let holes=81-givens
+
+let p=grid.map(r=>r.slice())
+
+while(holes>0){
+
+let r=Math.floor(Math.random()*9)
+let c=Math.floor(Math.random()*9)
+
+if(p[r][c]!=0){
+
+let backup=p[r][c]
+
+p[r][c]=0
+
+let copy=p.map(r=>r.slice())
+
+if(countSolutions(copy)!=1){
+
+p[r][c]=backup
+
+}else{
+
+holes--
+
+}
+
+}
+
+}
+
+return p
+
 }
 
 function drawBoard(){
-    let board=document.getElementById("board");
-    board.innerHTML="";
-    for(let r=0;r<9;r++){
-        let tr=document.createElement("tr");
-        for(let c=0;c<9;c++){
-            let td=document.createElement("td");
-            let input=document.createElement("input");
 
-            if(puzzle[r][c]!=0){
-                input.value=puzzle[r][c];
-                input.disabled=true;
-                td.classList.add("fixed");
-            }else{
-                input.addEventListener("input",()=>handleInput(r,c,input));
-            }
+let board=document.getElementById("board")
 
-            td.appendChild(input);
-            tr.appendChild(td);
-        }
-        board.appendChild(tr);
-    }
+board.innerHTML=""
+
+for(let r=0;r<9;r++){
+
+let tr=document.createElement("tr")
+
+for(let c=0;c<9;c++){
+
+let td=document.createElement("td")
+let input=document.createElement("input")
+
+if(puzzle[r][c]!=0){
+
+input.value=puzzle[r][c]
+input.disabled=true
+td.classList.add("fixed")
+
+}else{
+
+input.addEventListener("input",()=>handleInput(r,c,input))
+
+}
+
+td.appendChild(input)
+tr.appendChild(td)
+
+}
+
+board.appendChild(tr)
+
+}
+
 }
 
 function handleInput(r,c,input){
-    input.value=input.value.replace(/[^1-9]/g,"");
-    checkComplete();
+
+let v=input.value
+
+if(v==="") return
+
+if(!/^[1-9]$/.test(v)){
+
+alert("输入错误！只能输入1-9")
+
+input.value=""
+return
+
+}
+
+if(Number(v)!==solution[r][c]){
+
+mistakes++
+
+updateInfo()
+
+alert("错误！剩余："+(maxMistakes-mistakes))
+
+input.value=""
+
+if(mistakes>=maxMistakes){
+
+alert("错误达到3次，重新开始")
+
+newGame()
+
+}
+
+return
+
+}
+
+checkComplete()
+
+}
+
+function useHint(){
+
+if(hints<=0){
+
+alert("提示已用完")
+
+return
+
+}
+
+let inputs=document.querySelectorAll("td input")
+
+let empty=[]
+
+inputs.forEach((el,i)=>{
+
+if(!el.disabled && !el.value) empty.push(i)
+
+})
+
+if(empty.length==0) return
+
+let index=empty[Math.floor(Math.random()*empty.length)]
+
+let r=Math.floor(index/9)
+let c=index%9
+
+inputs[index].value=solution[r][c]
+
+hints--
+
+updateInfo()
+
 }
 
 function checkComplete(){
-    let inputs=document.querySelectorAll("td input");
-    for(let i=0;i<inputs.length;i++){
-        if(!inputs[i].disabled){
-            if(!inputs[i].value) return;
-            let r=Math.floor(i/9),c=i%9;
-            if(Number(inputs[i].value)!=solution[r][c]) return;
-        }
-    }
 
-    let gain=getLevel()*100;
-    score+=gain;
+let inputs=document.querySelectorAll("td input")
 
-    alert("Level Completed! +" + gain + " points");
+for(let i=0;i<inputs.length;i++){
 
-    if(round==100){
-        alert("Congratulations! You have reached Ultimate Master!");
-        return;
-    }
+if(!inputs[i].disabled){
 
-    round++;
-    updateInfo();
-    newGame();
+if(!inputs[i].value) return
+
+let r=Math.floor(i/9)
+let c=i%9
+
+if(Number(inputs[i].value)!=solution[r][c]) return
+
+}
+
+}
+
+score+=100
+
+updateLeaderboard()
+
+alert("完成！")
+
+round++
+
+if(round>100) round=1
+
+newGame()
+
+}
+
+function updateLeaderboard(){
+
+leaderboard.push({score:score,round:round,time:timer})
+
+leaderboard.sort((a,b)=>b.score-a.score)
+
+leaderboard=leaderboard.slice(0,10)
+
+localStorage.setItem("leaderboard",JSON.stringify(leaderboard))
+
+}
+
+function renderLeaderboard(){
+
+let html=""
+
+leaderboard.forEach((p,i)=>{
+
+html+=(i+1)+". Score:"+p.score+" Round:"+p.round+" Time:"+formatTime(p.time)+"<br>"
+
+})
+
+document.getElementById("leaderboard").innerHTML=html
+
 }
 
 function newGame(){
-    solution=generateSudoku();
-    puzzle=makePuzzle(solution);
-    drawBoard();
-    updateInfo();
+
+solution=generateSudoku()
+
+puzzle=makePuzzle(solution)
+
+mistakes=0
+hints=2
+
+drawBoard()
+
+startTimer()
+
+updateInfo()
+
 }
 
-newGame();
+newGame()
 
 </script>
 
